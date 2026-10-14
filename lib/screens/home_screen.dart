@@ -6,13 +6,8 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ホーム'),
-      ),
-      body: const Center(
-        child: Text('ホーム画面のコンテンツ'),
-      ),
+    return const Center(
+      child: Text('ホーム画面', style: TextStyle(fontSize: 24)),
     );
   }
 }
