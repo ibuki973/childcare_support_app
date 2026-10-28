@@ -1,4 +1,3 @@
-// lib/helpers/database_helper.dart
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -10,7 +9,7 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('childcare_records.db');
+    _database = await _initDB('childcare_support.db');
     return _database!;
   }
 
@@ -20,29 +19,45 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // テーブル追加に伴いバージョンを2に設定
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
   }
 
-  Future _createDB(Database db, int version) async {
-    // 例: 育児記録用のテーブル（ID、タイトル、メモ、作成日時）
+  Future<void> _createDB(Database db, int version) async {
+    // 子どもの情報を保存するテーブル
     await db.execute('''
-      CREATE TABLE records (
-        id INTEGER PRIMARY KEY AUTOINCREMENT
+      CREATE TABLE children (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        birthday TEXT NOT NULL,
+        gender TEXT NOT NULL
       )
     ''');
   }
 
-  // データ挿入
-  Future<int> insertRecord(Map<String, dynamic> row) async {
-    final db = await instance.database;
-    return await db.insert('records', row);
+  // 既に古いDBが端末にある場合でもchildrenテーブルを作成する処理
+  Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS children (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        birthday TEXT NOT NULL,
+        gender TEXT NOT NULL
+      )
+    ''');
   }
 
-  // データ全取得
-  Future<List<Map<String, dynamic>>> queryAllRecords() async {
+  // 子どもを新規登録する
+  Future<int> insertChild(Map<String, dynamic> row) async {
     final db = await instance.database;
-    return await db.query('records', orderBy: 'id DESC');
+    return await db.insert('children', row);
+  }
+
+  // 登録されている子どもの一覧を取得する
+  Future<List<Map<String, dynamic>>> getChildren() async {
+    final db = await instance.database;
+    return await db.query('children', orderBy: 'id ASC');
   }
 }
