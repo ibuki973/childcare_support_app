@@ -1,3 +1,4 @@
+// lib/screens/calendar_screen.dart
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -9,46 +10,68 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  // 表示形式（月・週などの切り替え用）
   CalendarFormat _calendarFormat = CalendarFormat.month;
-  // 現在フォーカスされている日と選択された日
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('カレンダー'),
-      ),
       body: TableCalendar(
-        // カレンダーの表示範囲
         firstDay: DateTime.utc(2020, 1, 1),
         lastDay: DateTime.utc(2030, 12, 31),
         focusedDay: _focusedDay,
         calendarFormat: _calendarFormat,
 
-        // 日付が選択されているかの判定
+        // 配色設定（見やすさ調整）
+        calendarStyle: CalendarStyle(
+          selectedDecoration: const BoxDecoration(
+            color: Colors.deepPurple,
+            shape: BoxShape.circle,
+          ),
+          selectedTextStyle: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+          todayDecoration: BoxDecoration(
+            color: Colors.deepPurple.withOpacity(0.3),
+            shape: BoxShape.circle,
+          ),
+          todayTextStyle: const TextStyle(
+            color: Colors.deepPurple,
+            fontWeight: FontWeight.bold,
+          ),
+          weekendTextStyle: const TextStyle(color: Colors.red),
+          defaultTextStyle: const TextStyle(
+            color: Colors.black87,
+            fontSize: 16,
+          ),
+        ),
+
+        headerStyle: const HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextStyle: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+
         selectedDayPredicate: (day) {
           return isSameDay(_selectedDay, day);
         },
-
-        // 日付をタップした時の処理
         onDaySelected: (selectedDay, focusedDay) {
           setState(() {
             _selectedDay = selectedDay;
             _focusedDay = focusedDay;
           });
         },
-
-        // 表示形式（月/週）の切り替え処理
         onFormatChanged: (format) {
           setState(() {
             _calendarFormat = format;
           });
         },
-
-        // ページ（月）を切り替えた時の処理
         onPageChanged: (focusedDay) {
           _focusedDay = focusedDay;
         },

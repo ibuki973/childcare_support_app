@@ -4,6 +4,8 @@ import 'home_screen.dart';
 import 'record_screen.dart';
 import 'setting_screen.dart';
 import 'ai_screen.dart';
+import 'calendar_screen.dart';
+
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -20,6 +22,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<Widget> _screens = const [
     HomeScreen(),
     RecordScreen(),
+    CalendarScreen(),
     SettingScreen(),
   ];
 
@@ -27,6 +30,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   final List<String> _titles = const [
     'ホーム',
     '記録',
+    'カレンダー',
     '設定',
   ];
 
@@ -70,6 +74,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.edit_note),
             label: 'Record',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_month),
+            label:'Calendar',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),
