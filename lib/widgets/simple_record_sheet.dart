@@ -1,5 +1,5 @@
 // lib/widgets/simple_record_sheet.dart
-// 簡易記録の入力シート。選択肢をタップして「記録する」を押すだけで保存できる。
+// 簡易記録の入力ダイアログ（中央に出るモーダルウィンドウ）。選択肢をタップして「記録する」を押すだけで保存できる。
 // すべての項目は任意なので、何も選ばずに保存してもよい（素早く記録できる）。
 import 'package:flutter/material.dart';
 
@@ -21,10 +21,8 @@ Future<bool> showSimpleRecordSheet(
   required int childId,
   DateTime? day,
 }) async {
-  final saved = await showModalBottomSheet<bool>(
+  final saved = await showDialog<bool>(
     context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
     builder: (_) => _SimpleRecordSheet(
       recordType: recordType,
       childId: childId,
@@ -143,11 +141,14 @@ class _SimpleRecordSheetState extends State<_SimpleRecordSheet> {
         '${_recordedAt.year}/${_two(_recordedAt.month)}/${_two(_recordedAt.day)}';
     final time = '${_two(_recordedAt.hour)}:${_two(_recordedAt.minute)}';
 
-    return Padding(
-      // キーボードが出てもメモ欄が隠れないようにする
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+    // Dialog はキーボードが出ても自動で位置を調整する
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 16, 16, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,9 +158,16 @@ class _SimpleRecordSheetState extends State<_SimpleRecordSheet> {
                 Icon(t.icon),
                 const SizedBox(width: 8),
                 Text(t.label, style: textTheme.titleLarge),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: '閉じる',
+                  onPressed:
+                      _saving ? null : () => Navigator.of(context).pop(false),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.access_time),
@@ -203,6 +211,7 @@ class _SimpleRecordSheetState extends State<_SimpleRecordSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
