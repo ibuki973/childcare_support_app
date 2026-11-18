@@ -45,12 +45,19 @@ class _MemoDialogState extends State<MemoDialog> {
   }
 
   // 保存済みのメモがあれば読み込む
+  // 読み込みに失敗しても、ぐるぐるで止まらないようにする
   Future<void> _loadMemo() async {
-    final note = await DatabaseHelper.instance.getMemo(
-      category: widget.category.name,
-      date: widget.date,
-      childId: widget.childId,
-    );
+    String? note;
+    try {
+      note = await DatabaseHelper.instance.getMemo(
+        category: widget.category.name,
+        date: widget.date,
+        childId: widget.childId,
+      );
+    } catch (e) {
+      debugPrint('メモの読み込みに失敗: $e');
+      _showError('メモを読み込めませんでした');
+    }
     if (!mounted) return;
     setState(() {
       _controller.text = note ?? '';
@@ -60,13 +67,26 @@ class _MemoDialogState extends State<MemoDialog> {
 
   // OKボタン：保存して閉じる
   Future<void> _save() async {
-    await DatabaseHelper.instance.saveMemo(
-      category: widget.category.name,
-      date: widget.date,
-      note: _controller.text,
-      childId: widget.childId,
-    );
+    try {
+      await DatabaseHelper.instance.saveMemo(
+        category: widget.category.name,
+        date: widget.date,
+        note: _controller.text,
+        childId: widget.childId,
+      );
+    } catch (e) {
+      debugPrint('メモの保存に失敗: $e');
+      _showError('メモを保存できませんでした');
+      return; // 書いた内容が消えないよう、閉じずに残す
+    }
     if (mounted) Navigator.pop(context);
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
