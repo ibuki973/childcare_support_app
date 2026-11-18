@@ -17,6 +17,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
   Future<void> _selectBirthday(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
+      locale: const Locale('ja', 'JP'),
       initialDate: DateTime.now(),
       firstDate: DateTime(2015),
       lastDate: DateTime.now(),
