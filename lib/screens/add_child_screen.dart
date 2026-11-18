@@ -62,7 +62,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffffffff), // 背景色を白に設定
+      backgroundColor: const Color(0xffffffff),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
@@ -76,7 +76,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                 alignment: Alignment.centerLeft,
                 onPressed: () => Navigator.pop(context),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
 
               // 子供の名前
               const Text(
@@ -94,7 +94,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 36),
 
               // 生年月日（タップでカレンダー表示）
               const Text(
@@ -116,7 +116,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 48),
+              const SizedBox(height: 36),
 
               // 性別（男女の選択）
               const Text(
@@ -156,7 +156,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 64),
+              const SizedBox(height: 48),
 
               // 「赤ちゃんを登録」ボタン
               Center(
@@ -169,6 +169,7 @@ class _AddChildScreenState extends State<AddChildScreen> {
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black87,
                       elevation: 0,
+                      side: const BorderSide(color: Colors.black26),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

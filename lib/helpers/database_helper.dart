@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -6,6 +8,15 @@ import '../models/care_record.dart';
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._init();
   static Database? _database;
+
+  // 現在選択されている子どものIDを保持し、変更を画面へ通知するNotifier
+  final ValueNotifier<int?> selectedChildIdNotifier = ValueNotifier<int?>(null);
+
+  // 既存のコードとの互換性を保つための getter / setter
+  int? get selectedChildId => selectedChildIdNotifier.value;
+  set selectedChildId(int? id) {
+    selectedChildIdNotifier.value = id;
+  }
 
   DatabaseHelper._init();
 
@@ -105,16 +116,40 @@ class DatabaseHelper {
 
   // ===== 子ども =====
 
-  // 子どもを新規登録する
+  // 子どもを新規登録する（登録した子どもを自動的に選択状態にする）
   Future<int> insertChild(Map<String, dynamic> row) async {
     final db = await instance.database;
-    return await db.insert('children', row);
+    final id = await db.insert('children', row);
+    selectedChildId = id;
+    return id;
   }
 
   // 登録されている子どもの一覧を取得する
   Future<List<Map<String, dynamic>>> getChildren() async {
     final db = await instance.database;
     return await db.query('children', orderBy: 'id ASC');
+  }
+
+  // 現在選択されている子どもの情報を取得する（未選択なら最新の子どもを選択）
+  Future<Map<String, dynamic>?> getSelectedChild() async {
+    final children = await getChildren();
+    if (children.isEmpty) {
+      selectedChildId = null;
+      return null;
+    }
+
+    if (selectedChildId != null) {
+      for (final child in children) {
+        if (child['id'] == selectedChildId) {
+          return child;
+        }
+      }
+    }
+
+    // まだ選択されていない場合は、最後に登録された子どもを初期選択にする
+    final defaultChild = children.last;
+    selectedChildId = defaultChild['id'] as int?;
+    return defaultChild;
   }
 
   // ---- 記録（records） ----
