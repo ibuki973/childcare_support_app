@@ -60,6 +60,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
       // === フッター（BottomNavigationBar） ===
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor:Colors.grey.shade600,
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
