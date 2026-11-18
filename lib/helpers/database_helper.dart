@@ -20,6 +20,26 @@ class DatabaseHelper {
 
   DatabaseHelper._init();
 
+  // 指定した月の子どもの日記（category = 'diary'）が存在する日付のセット（'YYYY-MM-DD'）を取得する
+  Future<Set<String>> getDiaryDatesForMonth(int? childId, int year, int month) async {
+    final db = await instance.database;
+    final mStr = month.toString().padLeft(2, '0');
+    final prefix = '$year-$mStr';
+
+    final (where, args) = childId == null
+        ? ('category = ? AND date LIKE ? AND child_id IS NULL', ['diary', '$prefix%'])
+        : ('category = ? AND date LIKE ? AND child_id = ?', ['diary', '$prefix%', childId]);
+
+    final rows = await db.query(
+      'memos',
+      columns: ['date'],
+      where: where,
+      whereArgs: args,
+    );
+
+    return rows.map((row) => row['date'] as String).toSet();
+  }
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     final db = await _initDB('childcare_support.db');
