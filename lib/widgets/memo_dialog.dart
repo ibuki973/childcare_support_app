@@ -1,4 +1,5 @@
 // lib/widgets/memo_dialog.dart
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../helpers/database_helper.dart';
 import '../models/memo_category.dart';
@@ -36,6 +37,7 @@ class MemoDialog extends StatefulWidget {
 
 class _MemoDialogState extends State<MemoDialog> {
   final TextEditingController _controller = TextEditingController();
+  TimeOfDay _selectedTime = TimeOfDay.now();
   bool _loading = true;
 
   @override
@@ -43,6 +45,8 @@ class _MemoDialogState extends State<MemoDialog> {
     super.initState();
     _loadMemo();
   }
+
+  String _two(int n) => n.toString().padLeft(2, '0');
 
   // 保存済みのメモがあれば読み込む
   // 読み込みに失敗しても、ぐるぐるで止まらないようにする
@@ -59,19 +63,52 @@ class _MemoDialogState extends State<MemoDialog> {
       _showError('メモを読み込めませんでした');
     }
     if (!mounted) return;
-    setState(() {
+
+    if (widget.category.isTime) {
+      if (note != null && note.contains(':')) {
+        final parts = note.split(':');
+        if (parts.length == 2) {
+          final h = int.tryParse(parts[0]);
+          final m = int.tryParse(parts[1]);
+          if (h != null && m != null) {
+            _selectedTime = TimeOfDay(hour: h, minute: m);
+          }
+        }
+      } else {
+        _selectedTime = TimeOfDay.now();
+      }
+    } else {
       _controller.text = note ?? '';
+    }
+
+    setState(() {
       _loading = false;
+    });
+  }
+
+  void _onTimeChanged(TimeOfDay newTime) {
+    setState(() {
+      _selectedTime = newTime;
+    });
+  }
+
+  void _setNow() {
+    setState(() {
+      _selectedTime = TimeOfDay.now();
     });
   }
 
   // OKボタン：保存して閉じる
   Future<void> _save() async {
     try {
+      final noteToSave = widget.category.isTime
+          ? '${_two(_selectedTime.hour)}:${_two(_selectedTime.minute)}'
+          : _controller.text;
+
       await DatabaseHelper.instance.saveMemo(
         category: widget.category.name,
         date: widget.date,
-        note: _controller.text,
+        note: noteToSave,
         childId: widget.childId,
       );
     } catch (e) {
@@ -110,7 +147,7 @@ class _MemoDialogState extends State<MemoDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // タイトル（例：病院）
+              // タイトル（例：病院、起きる）
               Padding(
                 padding: const EdgeInsets.only(left: 9),
                 child: Text(
@@ -124,7 +161,7 @@ class _MemoDialogState extends State<MemoDialog> {
               ),
               const SizedBox(height: 14),
 
-              // 横線入りの白いメモ欄
+              // メモ欄または時刻選択領域
               Container(
                 height: 239,
                 clipBehavior: Clip.antiAlias,
@@ -134,7 +171,14 @@ class _MemoDialogState extends State<MemoDialog> {
                 ),
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : LinedMemoField(controller: _controller),
+                    : widget.category.isTime
+                        ? _TimePickerContent(
+                            category: widget.category,
+                            time: _selectedTime,
+                            onTimeChanged: _onTimeChanged,
+                            onSetNow: _setNow,
+                          )
+                        : LinedMemoField(controller: _controller),
               ),
               const SizedBox(height: 15),
 
@@ -168,6 +212,120 @@ class _MemoDialogState extends State<MemoDialog> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TimePickerContent extends StatelessWidget {
+  const _TimePickerContent({
+    required this.category,
+    required this.time,
+    required this.onTimeChanged,
+    required this.onSetNow,
+  });
+
+  final MemoCategory category;
+  final TimeOfDay time;
+  final ValueChanged<TimeOfDay> onTimeChanged;
+  final VoidCallback onSetNow;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        const SizedBox(height: 12),
+        // ヘッダー行（アイコン＋タイトル＋現在時刻にするボタン）
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: category.color.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(category.icon, size: 18, color: category.color),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${category.label}時刻',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: category.color,
+                ),
+              ),
+              const Spacer(),
+              InkWell(
+                onTap: onSetNow,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: category.color.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.access_time_filled,
+                        size: 14,
+                        color: category.color,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '現在時刻',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: category.color,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 4),
+        // ドラムロール（ホイール選択画面）をカード内に直接表示
+        Expanded(
+          child: CupertinoTheme(
+            data: CupertinoThemeData(
+              textTheme: CupertinoTextThemeData(
+                dateTimePickerTextStyle: TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: category.color,
+                ),
+              ),
+            ),
+            child: CupertinoDatePicker(
+              key: ValueKey('${time.hour}:${time.minute}'),
+              mode: CupertinoDatePickerMode.time,
+              use24hFormat: true,
+              initialDateTime: DateTime(
+                2026,
+                1,
+                1,
+                time.hour,
+                time.minute,
+              ),
+              onDateTimeChanged: (DateTime dt) {
+                onTimeChanged(TimeOfDay(hour: dt.hour, minute: dt.minute));
+              },
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+      ],
     );
   }
 }

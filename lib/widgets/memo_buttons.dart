@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/memo_category.dart';
 import 'memo_dialog.dart';
 
-// 病院・服薬・おやつ・予防接種の4つのボタンを横に並べる
+// 起きる・寝る・病院・服薬・おやつ・予防接種などのボタンを横に並べる
 // 記録画面の下のアイコン列（ミルク・おむつ…）の後ろに置く想定
 class MemoButtonRow extends StatelessWidget {
   const MemoButtonRow({super.key, required this.date, this.childId});
